@@ -1,0 +1,16 @@
+
+echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] [temp-sensor-001] [connection] [info] Device connected"
+echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] [temp-sensor-001] [info] Temperature reading: 22.5C" >> logs/iot-device.log
+echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] [temp-sensor-001] [error] [high] Temperature threshold exceeded (30.2C)" >> logs/iot-device.log
+echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] [temp-sensor-001] [threat] [critical] Unauthorized access attempt" >> logs/iot-device.log
+echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] [temp-sensor-001] [disconnection] [info] Device disconnected" >> logs/iot-device.log  
+[2025-03-30 12:01:22] [light-iot] [Sensor] [INFO] Temperature reading: 24°C
+[2025-03-30 12:02:10] [light-iot] [Security] [WARNING] Unauthorized access attempt detected.
+[2025-03-30 12:03:45] [light-iot] [Network] [ERROR] Device lost connection to server.
+[2025-03-30 12:04:30] [light-iot] [Power] [INFO] Battery level: 85%
+[2025-03-30 12:05:15] [light-iot] [System] [CRITICAL] Overheating detected! Shutting down...
+[2025-03-30 12:05:15] [cam90] [System] [CRITICAL] Overheating detected! Shutting down...
+[2025-03-30 12:01:22] [light-iot] [Sensor] [INFO] Temperature reading: 24°C
+[2025-03-30 12:02:10] [light-iot] [Security] [WARNING] Unauthorized access attempt detected.
+[2025-03-30 12:03:45] [light-iot] [Network] [ERROR] Device lost connection to server.
+[2025-03-30 12:04:30] [light-iot] [Power] [INFO] Battery level: 85%

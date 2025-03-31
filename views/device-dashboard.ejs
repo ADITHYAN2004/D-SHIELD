@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Enhanced Color Palette */
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --primary-bg: rgba(79, 70, 229, 0.1);
+            
+            --success: #10b981;
+            --success-dark: #059669;
+            --success-light: #a7f3d0;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            
+            --warning: #f59e0b;
+            --warning-dark: #d97706;
+            --warning-light: #fcd34d;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --danger-light: #fca5a5;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            
+            /* Severity Colors */
+            --critical: #dc2626;
+            --critical-bg: rgba(220, 38, 38, 0.1);
+            --high: #ea580c;
+            --high-bg: rgba(234, 88, 12, 0.1);
+            --medium: #d97706;
+            --medium-bg: rgba(217, 119, 6, 0.1);
+            --low: #65a30d;
+            --low-bg: rgba(101, 163, 13, 0.1);
+            --info: #3b82f6;
+            --info-bg: rgba(59, 130, 246, 0.1);
+            
+            --dark: #1e293b;
+            --light: #f8fafc;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --border-radius: 10px;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --hover-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        body {
+            background-color: var(--gray-100);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+        
+        /* Header */
+        .dashboard-header {
+            background-color: white;
+            padding: 20px 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .logo {
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .logo i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        /* Cards */
+        .stats-card {
+            background: white;
+            border-radius: var(--border-radius);
+            border: none;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .stats-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+            letter-spacing: -0.025em;
+        }
+        
+        .stats-label {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .stats-icon {
+            color: white;
+            font-size: 1.75rem;
+            background-color: var(--primary);
+            height: 56px;
+            width: 56px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .stats-card:nth-child(1) .stats-icon {
+            background-color: var(--primary);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .stats-card:nth-child(2) .stats-icon {
+            background-color: var(--success);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+        }
+        
+        .stats-card:nth-child(3) .stats-icon {
+            background-color: var(--warning);
+            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.2);
+        }
+        
+        .stats-card:nth-child(4) .stats-icon {
+            background-color: var(--info);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 1rem 0;
+            transition: all var(--transition-normal);
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            
+            text-decoration: none;
+            margin-left: 2rem;
+            font-weight: 500;
+            font-size: 1rem;
+          
+            position: relative;
+            transition: all var(--transition-fast);
+        }
+        
+        .nav-links a:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            transition: width var(--transition-normal);
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .nav-links a:hover:after {
+            width: 100%;
+        }
+        
+        .nav-button {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            margin-left: 2rem;
+            font-weight: 600;
+            transition: all var(--transition-normal);
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--dark);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* Main content */
+        .content-card {
+            background: white;
+            border-radius: var(--border-radius);
+            border: none;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px 24px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .card-title {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--gray-800);
+            letter-spacing: -0.01em;
+        }
+        
+        /* Accordion */
+        .accordion-item {
+            border: 1px solid var(--gray-200);
+            margin-bottom: 12px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .accordion-button {
+            padding: 18px 20px;
+            background: white;
+            box-shadow: none;
+            font-weight: 500;
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background-color: var(--primary-bg);
+            color: var(--primary);
+            box-shadow: none;
+            font-weight: 600;
+        }
+        
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: var(--primary-light);
+        }
+        
+        /* Log items */
+        .log-card {
+            border-left: 4px solid;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .log-card:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+        
+        .log-card.nmap {
+            border-color: var(--primary);
+        }
+        
+        .log-card.iot {
+            border-color: var(--danger);
+        }
+        
+        .log-card.unknown {
+            border-color: var(--warning);
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .log-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+        
+        .log-content {
+            padding: 12px;
+            font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+            font-size: 0.85rem;
+            background-color: var(--gray-50);
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+        
+        /* Badges */
+        .badge {
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .badge.bg-primary {
+            background-color: var(--primary-bg) !important;
+            color: var(--primary);
+        }
+        
+        .badge.bg-secondary {
+            background-color: var(--gray-100) !important;
+            color: var(--gray-700);
+        }
+        
+        .badge.bg-danger {
+            background-color: var(--danger-bg) !important;
+            color: var(--danger);
+        }
+        
+        .badge.bg-success {
+            background-color: var(--success-bg) !important;
+            color: var(--success);
+        }
+        
+        .badge.bg-warning {
+            background-color: var(--warning-bg) !important;
+            color: var(--warning);
+        }
+        
+        /* Severity Badges */
+        .badge.level-critical {
+            background-color: var(--critical-bg) !important;
+            color: var(--critical);
+        }
+        
+        .badge.level-high {
+            background-color: var(--high-bg) !important;
+            color: var(--high);
+        }
+        
+        .badge.level-medium {
+            background-color: var(--medium-bg) !important;
+            color: var(--medium);
+        }
+        
+        .badge.level-low {
+            background-color: var(--low-bg) !important;
+            color: var(--low);
+        }
+        
+        .badge.level-info {
+            background-color: var(--info-bg) !important;
+            color: var(--info);
+        }
+        
+        /* Empty state */
+        .no-logs {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--gray-500);
+        }
+        
+        .no-logs i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: var(--gray-400);
+        }
+        
+        .no-logs p {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        /* Buttons */
+        .btn {
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            letter-spacing: 0.01em;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.12);
+        }
+        
+        .btn-outline-secondary {
+            color: var(--gray-700);
+            border-color: var(--gray-300);
+        }
+        
+        .btn-outline-secondary:hover {
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            border-color: var(--gray-400);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            border-radius: 6px;
+        }
+        
+        /* Status dot */
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            position: relative;
+        }
+        
+        .status-active {
+            background-color: var(--success);
+            box-shadow: 0 0 0 4px var(--success-bg);
+        }
+        
+        .status-active:before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: var(--success);
+            opacity: 0.3;
+            top: -4px;
+            left: -4px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.5;
+            }
+            70% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+        }
+        
+        /* Footer */
+        footer {
+            color: var(--gray-500);
+            font-size: 0.875rem;
+            padding: 24px 0;
+            font-weight: 500;
+        }
+        
+        /* Utility classes */
+        .text-primary {
+            color: var(--primary) !important;
+        }
+        
+        .text-success {
+            color: var(--success) !important;
+        }
+        
+        .text-danger {
+            color: var(--danger) !important;
+        }
+        
+        .text-warning {
+            color: var(--warning) !important;
+        }
+        
+        .text-muted {
+            color: var(--gray-600) !important;
+            font-weight: 500;
+        }
+        
+        /* Form controls */
+        .form-select {
+            border-color: var(--gray-300);
+            box-shadow: none;
+            font-weight: 500;
+            border-radius: 8px;
+            padding: 8px 36px 8px 12px;
+        }
+        
+        .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px var(--primary-bg);
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 8px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 8px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+        
+        /* Custom animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background: var(--white);
+                box-shadow: var(--shadow-md);
+                padding: 1.5rem;
+                border-radius: 0 0 12px 12px;
+                opacity: 0;
+                transform: translateY(-10px);
+                transition: all var(--transition-normal);
+            }
+            
+            .nav-links.active {
+                display: flex;
+                opacity: 1;
+                transform: translateY(0);
+            }
+            
+            .nav-links a {
+                margin: 0.8rem 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                max-width: 550px;
+                margin: 0 auto;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+      <nav class="navbar">
+        <div class="container nav-content">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+                D-SHIELD
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="/">Home</a>
+                <a href="process-logs">Dashboard</a>
+               
+
+                <a href="add-device" class="nav-button">ADD DEVICE</a>
+                <button type="button" class="btn btn-outline-secondary"  >
+                    <a href="process-logs" class="bi bi-arrow-repeat me-1h">Refresh</a> 
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="row">
+            <div class="col-md-6 col-lg-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stats-number"><%= totalDevices %></div>
+                            <div class="stats-label">Devices</div>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-pc"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stats-number"><%= totalLogs %></div>
+                            <div class="stats-label">Logs</div>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-list-ul"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stats-number" id="lastUpdate">Just Now</div>
+                            <div class="stats-label">Last Update</div>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="stats-number">
+                                <span class="status-dot status-active"></span>Active
+                            </div>
+                            <div class="stats-label">Status</div>
+                        </div>
+                        <div class="stats-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 mb-4">
+            <div class="col">
+                <div class="content-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">Device Logs</h5>
+                        
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="accordion" id="deviceAccordion">
+                            <% let deviceCount = 0; %>
+                            <% Object.entries(deviceLogs).forEach(([deviceId, deviceData], index) => { %>
+                                <% if (deviceData.logs.length > 0) { deviceCount++; %>
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading<%= deviceId %>">
+                                            <button class="accordion-button <%= index === 0 ? '' : 'collapsed' %>" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#collapse<%= deviceId %>" 
+                                                aria-expanded="<%= index === 0 ? 'true' : 'false' %>" 
+                                                aria-controls="collapse<%= deviceId %>">
+                                                
+                                                <div class="d-flex justify-content-between align-items-center w-100">
+                                                    <div>
+                                                        <strong><%= deviceData.device.name %></strong>
+                                                        <span class="badge bg-secondary ms-2"><%= deviceData.device.ip %></span>
+                                                    </div>
+                                                    <span class="badge bg-primary ms-2">
+                                                        <%= deviceData.logs.length %>
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse<%= deviceId %>" 
+                                            class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>" 
+                                            aria-labelledby="heading<%= deviceId %>" 
+                                            data-bs-parent="#deviceAccordion">
+                                            <div class="accordion-body">
+                                                <div class="mb-3 d-flex justify-content-between">
+                                                    <div>
+                                                        <span class="text-muted">MAC:</span> <%= deviceData.device.mac %>
+                                                    </div>
+                                                </div>
+                                                
+                                                <% if (deviceData.logs.length > 0) { %>
+                                                    <% deviceData.logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10).forEach(log => { %>
+                                                        <div class="card log-card <%= log.type %>">
+                                                            <div class="card-body py-3 px-4">
+                                                                <div class="log-header">
+                                                                    <div>
+                                                                        <span class="badge <%= log.type === 'nmap' ? 'bg-primary' : log.type === 'iot' ? 'bg-danger' : 'bg-warning' %>">
+                                                                            <%= log.type === 'nmap' ? 'Network Scan' : log.type === 'iot' ? 'IoT Activity' : 'Unknown' %>
+                                                                        </span>
+                                                                        
+                                                                        <% if (log.content && log.content.level) { 
+                                                                            let levelClass = '';
+                                                                            switch(log.content.level.toLowerCase()) {
+                                                                                case 'critical':
+                                                                                    levelClass = 'level-critical';
+                                                                                    break;
+                                                                                case 'error':
+                                                                                    levelClass = 'level-critical';
+                                                                                    break;
+                                                                                case 'high':
+                                                                                    levelClass = 'level-high';
+                                                                                    break;
+                                                                                case 'warning':
+                                                                                    levelClass = 'level-medium';
+                                                                                    break;
+                                                                                case 'medium':
+                                                                                    levelClass = 'level-medium';
+                                                                                    break;
+                                                                                case 'low':
+                                                                                    levelClass = 'level-low';
+                                                                                    break;
+                                                                                case 'info':
+                                                                                case 'information':
+                                                                                    levelClass = 'level-info';
+                                                                                    break;
+                                                                                default:
+                                                                                    levelClass = 'bg-secondary';
+                                                                            }
+                                                                        %>
+                                                                            <span class="badge <%= levelClass %> ms-1">
+                                                                                <%= log.content.level %>
+                                                                            </span>
+                                                                        <% } %>
+                                                                    </div>
+                                                                    <div class="log-time">
+                                                                        <%= new Date(log.timestamp).toLocaleString() %>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <% if (log.type === 'nmap') { %>
+                                                                    <div class="log-content mt-3">
+                                                                        <% if (log.content.mac) { %>
+                                                                            <div><span class="text-muted">MAC:</span> <%= log.content.mac %></div>
+                                                                        <% } %>
+                                                                        <% if (log.content.latency) { %>
+                                                                            <div><span class="text-muted">Latency:</span> <%= log.content.latency %></div>
+                                                                        <% } %>
+                                                                        <% if (log.content.ports && log.content.ports.length > 0) { %>
+                                                                            <div><span class="text-muted">Open Ports:</span></div>
+                                                                            <div class="mt-2">
+                                                                                <% log.content.ports.forEach(port => { %>
+                                                                                    <span class="badge bg-secondary me-2 mb-1">
+                                                                                        <%= port.port %> | <%= port.service %>
+                                                                                    </span>
+                                                                                <% }); %>
+                                                                            </div>
+                                                                        <% } %>
+                                                                    </div>
+                                                                <% } else if (log.type === 'iot') { %>
+                                                                    <div class="log-content mt-3">
+                                                                        <div><span class="text-muted">Category:</span> <%= log.content.category %></div>
+                                                                        <% if (log.content.level) { 
+                                                                            let levelClass = '';
+                                                                            switch(log.content.level.toLowerCase()) {
+                                                                                case 'critical':
+                                                                                case 'error':
+                                                                                    levelClass = 'text-danger fw-bold';
+                                                                                    break;
+                                                                                case 'high':
+                                                                                    levelClass = 'text-danger';
+                                                                                    break;
+                                                                                case 'warning':
+                                                                                case 'medium':
+                                                                                    levelClass = 'text-warning';
+                                                                                    break;
+                                                                                case 'low':
+                                                                                    levelClass = 'text-success';
+                                                                                    break;
+                                                                                case 'info':
+                                                                                case 'information':
+                                                                                    levelClass = 'text-primary';
+                                                                                    break;
+                                                                                default:
+                                                                                    levelClass = '';
+                                                                            }
+                                                                        %>
+                                                                            <div class="mt-1">
+                                                                                <span class="text-muted">Level:</span> 
+                                                                                <span class="<%= levelClass %>">
+                                                                                    <%= log.content.level %>
+                                                                                </span>
+                                                                            </div>
+                                                                        <% } %>
+                                                                        <div class="mt-2">
+                                                                            <span class="text-muted">Message:</span> 
+                                                                            <% if (log.content.level && 
+                                                                                  (log.content.level.toLowerCase() === 'critical' || 
+                                                                                   log.content.level.toLowerCase() === 'error' || 
+                                                                                   log.content.level.toLowerCase() === 'high')) { %>
+                                                                                <span class="fw-bold text-danger">
+                                                                                    <%= log.content.message %>
+                                                                                </span>
+                                                                            <% } else { %>
+                                                                                <%= log.content.message %>
+                                                                            <% } %>
+                                                                        </div>
+                                                                    </div>
+                                                                <% } else { %>
+                                                                    <div class="log-content mt-3">
+                                                                        <div><span class="text-muted">Content:</span> <%= JSON.stringify(log.content) %></div>
+                                                                    </div>
+                                                                <% } %>
+                                                                <div class="mt-2">
+                                                                    <small class="text-muted"><%= log.sourceFile %></small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    <% }); %>
+                                                    
+                                                    <% if (deviceData.logs.length > 10) { %>
+                                                        <div class="text-center mt-4">
+                                                            <a href="/device-logs/<%= deviceId %>" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-list-ul me-1"></i> View all logs
+                                                            </a>
+                                                        </div>
+                                                    <% } %>
+                                                <% } else { %>
+                                                    <div class="no-logs">
+                                                        <i class="bi bi-info-circle"></i>
+                                                        <p>No logs found for this device.</p>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            <% }); %>
+                            
+                            <% if (deviceCount === 0) { %>
+                                <div class="no-logs">
+                                    <i class="bi bi-exclamation-circle"></i>
+                                    <p>No device logs found in the system.</p>
+                                    <button class="btn btn-primary">
+                                        <i class="bi bi-search me-1"></i> Scan Network
+                                    </button>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h5 class="card-title">Network Activity</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="networkActivityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h5 class="card-title">Alert Distribution</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="chart-container" style="position: relative; height: 250px;">
+                            <canvas id="alertDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="content-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">Recent Network Events</h5>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-download me-1"></i> Export
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Device</th>
+                                        <th>Event Type</th>
+                                        <th>Severity</th>
+                                        <th>Message</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% 
+                                    let allEvents = [];
+                                    Object.values(deviceLogs).forEach(deviceData => {
+                                        deviceData.logs.forEach(log => {
+                                            allEvents.push({
+                                                timestamp: log.timestamp,
+                                                device: deviceData.device.name,
+                                                ip: deviceData.device.ip,
+                                                type: log.type,
+                                                level: log.content.level || 'Info',
+                                                message: log.content.message || (log.type === 'nmap' ? 'Network scan completed' : 'Unknown event')
+                                            });
+                                        });
+                                    });
+                                    
+                                    // Sort by timestamp, newest first
+                                    allEvents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                                    
+                                    // Get only the 10 most recent events
+                                    allEvents = allEvents.slice(0, 10);
+                                    
+                                    allEvents.forEach(event => {
+                                        let levelClass = '';
+                                        switch((event.level || '').toLowerCase()) {
+                                            case 'critical':
+                                            case 'error':
+                                                levelClass = 'level-critical';
+                                                break;
+                                            case 'high':
+                                                levelClass = 'level-high';
+                                                break;
+                                            case 'warning':
+                                            case 'medium':
+                                                levelClass = 'level-medium';
+                                                break;
+                                            case 'low':
+                                                levelClass = 'level-low';
+                                                break;
+                                            case 'info':
+                                            case 'information':
+                                                levelClass = 'level-info';
+                                                break;
+                                            default:
+                                                levelClass = 'bg-secondary';
+                                        }
+                                    %>
+                                        <tr>
+                                            <td><%= new Date(event.timestamp).toLocaleString() %></td>
+                                            <td>
+                                                <%= event.device %>
+                                                <small class="d-block text-muted"><%= event.ip %></small>
+                                            </td>
+                                            <td>
+                                                <span class="badge <%= event.type === 'nmap' ? 'bg-primary' : event.type === 'iot' ? 'bg-danger' : 'bg-warning' %>">
+                                                    <%= event.type === 'nmap' ? 'Network Scan' : event.type === 'iot' ? 'IoT Activity' : 'Unknown' %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge <%= levelClass %>">
+                                                    <%= event.level %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <% if (event.level && 
+                                                      (event.level.toLowerCase() === 'critical' || 
+                                                       event.level.toLowerCase() === 'error' || 
+                                                       event.level.toLowerCase() === 'high')) { %>
+                                                    <span class="text-danger"><%= event.message %></span>
+                                                <% } else { %>
+                                                    <%= event.message %>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                    
+                                    <% if (allEvents.length === 0) { %>
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4">
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                No recent events found
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="border-top">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    Network Monitor &copy; <%= new Date().getFullYear() %> - All Rights Reserved
+                </div>
+                <div>
+                    Version 1.2.0
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Update last update time
+        function updateLastUpdateTime() {
+            const element = document.getElementById('lastUpdate');
+            const lastUpdate = new Date(); // Or use your actual timestamp
+            
+            // Format time for display
+            let timeString;
+            const minutes = Math.floor((new Date() - lastUpdate) / 60000);
+            
+            if (minutes < 1) {
+                timeString = 'Just Now';
+            } else if (minutes === 1) {
+                timeString = '1 minute ago';
+            } else if (minutes < 60) {
+                timeString = `${minutes} minutes ago`;
+            } else {
+                const hours = Math.floor(minutes / 60);
+                timeString = `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            }
+            
+            element.textContent = timeString;
+        }
+        
+        // Initialize Network Activity Chart
+        const networkActivityCtx = document.getElementById('networkActivityChart').getContext('2d');
+        const networkActivityChart = new Chart(networkActivityCtx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [
+                    {
+                        label: 'Traffic (MB)',
+                        data: [12, 19, 38, 55, 42, 18],
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Active Devices',
+                        data: [5, 4, 6, 9, 8, 6],
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Initialize Alert Distribution Chart
+        const alertDistributionCtx = document.getElementById('alertDistributionChart').getContext('2d');
+        const alertDistributionChart = new Chart(alertDistributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
+                datasets: [{
+                    data: [5, 12, 18, 25, 40],
+                    backgroundColor: [
+                        'rgba(220, 38, 38, 0.8)',
+                        'rgba(234, 88, 12, 0.8)',
+                        'rgba(217, 119, 6, 0.8)',
+                        'rgba(101, 163, 13, 0.8)',
+                        'rgba(59, 130, 246, 0.8)'
+                    ],
+                    borderColor: 'white',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        
+        // Refresh button click handler
+        document.getElementById('refreshButton').addEventListener('click', function() {
+            // Show loading indicator
+            this.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Refreshing...';
+            this.disabled = true;
+            
+            // Simulate refresh
+            setTimeout(() => {
+                // Remove loading indicator
+                this.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Refresh';
+                this.disabled = false;
+                
+                // Update last update time
+                updateLastUpdateTime();
+                
+                // Show toast notification
+                alert('Dashboard refreshed successfully!');
+                
+                // In a real app, you would fetch new data and update the UI
+            }, 1500);
+        });
+        
+        // Initialize
+        updateLastUpdateTime();
+        
+        // Update last update time periodically
+        setInterval(updateLastUpdateTime, 60000);
+    </script>
+</body>
+</html>

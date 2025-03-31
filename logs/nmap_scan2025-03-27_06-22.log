@@ -1,0 +1,47 @@
+# Nmap 7.94SVN scan initiated Thu Mar 27 06:22:29 2025 as: nmap -sS -oN /var/log/nmap_scan2025-03-27_06-22.log 192.168.2.0/24
+Nmap scan report for 192.168.2.30
+Host is up (0.088s latency).
+All 1000 scanned ports on 192.168.2.30 are in ignored states.
+Not shown: 1000 closed tcp ports (reset)
+MAC Address: 32:B1:D5:EB:61:AC (Unknown)
+
+Nmap scan report for 192.168.2.1
+Host is up (0.0000020s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+53/tcp open  domain
+
+# Nmap done at Thu Mar 27 06:23:42 2025 -- 256 IP addresses (2 hosts up) scanned in 73.18 seconds
+Nmap scan report for 192.168.0.3 (light-iot)
+Host is up (0.005s latency).
+PORT      STATE SERVICE
+22/tcp    open  ssh
+80/tcp    open  http
+443/tcp   open  https
+
+Nmap scan report for 192.168.0.3 (light-iot)
+Host is up (0.006s latency).
+PORT      STATE SERVICE
+21/tcp    closed ftp
+8080/tcp  open   http-proxy
+3306/tcp  closed mysql
+
+Nmap scan report for 192.168.0.3 (light-iot)
+Host is up (0.004s latency).
+PORT      STATE SERVICE
+1883/tcp  open  mqtt
+8883/tcp  open  secure-mqtt
+
+Nmap scan report for 192.168.0.3 (light-iot)
+Host is up (0.007s latency).
+PORT      STATE SERVICE
+53/tcp    open  domain
+443/tcp   open  https
+
+Nmap scan report for 192.168.0.3 (light-iot)
+Host is up (0.003s latency).
+PORT      STATE SERVICE
+110/tcp   closed pop3
+995/tcp   open   pop3s
+
