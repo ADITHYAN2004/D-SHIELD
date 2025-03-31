@@ -273,8 +273,8 @@ app.post('/api/devices', async (req, res) => {
         
         // Using sudo with password through environment variable for security
         // (Make sure to set SUDO_PASSWORD as an environment variable)
-        const command = `echo "${"<27iwrmdp@22"}" | sudo -S bash -c 'echo "${dnsmasqEntry}" >> /etc/dnsmasq.conf && sudo systemctl restart dnsmasq'`;
-        
+        const command = `echo "${"Annani2.0"}" | sudo -S bash -c 'echo "${dnsmasqEntry}" >> /etc/dnsmasq.conf && sudo systemctl restart dnsmasq'`;
+      
         exec(command, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error updating dnsmasq.conf: ${error.message}`);
