@@ -33,13 +33,13 @@ PORT      STATE SERVICE
 1883/tcp  open  mqtt
 8883/tcp  open  secure-mqtt
 
-Nmap scan report for 192.168.0.3 (light-iot)
+Nmap scan report for 192.168.1.124 (light-iot)
 Host is up (0.007s latency).
 PORT      STATE SERVICE
 53/tcp    open  domain
 443/tcp   open  https
 
-Nmap scan report for 192.168.0.3 (light-iot)
+Nmap scan report for 192.168.1.124 (light-iot)
 Host is up (0.003s latency).
 PORT      STATE SERVICE
 110/tcp   closed pop3
