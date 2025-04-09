@@ -1,11 +1,17 @@
-# D-SHIELD
-IoT Gateway Setup - README
-IoT Gateway Setup - README
-This document outlines the configuration and tools used to build a Privacy-Focused IoT
-Security Gateway. It provides internet access, static IP management, and real-time traffic
-analysis with packet inspection and alerting.
+# IoT Gateway Setup - README
+
+## Privacy-Focused IoT Security Gateway
+
+This document provides a comprehensive guide to setting up a Privacy-Focused IoT Security Gateway.  
+The gateway enables:
+- Secure internet access to connected IoT devices
+- Static IP assignment via DHCP
+- Real-time traffic analysis using tools like Snort and Tshark
+- Packet inspection and alerting to monitor for suspicious activity
+
 --------------------------------------------------
 1. Tools Used
+```
 1.1 `hostapd`
 - **Purpose**: Create a Wi-Fi access point.
 - **Config File**: `/etc/hostapd/hostapd.conf`
