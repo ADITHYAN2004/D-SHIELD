@@ -63,6 +63,49 @@ function parseIoTLog(log) {
     return logEntries;
 }
 
+// Function to parse Firewall logs
+function parseFirewallLog(log) {
+    const logEntries = [];
+    const lines = log.split('\n');
+    
+    lines.forEach((line) => {
+        if (!line.trim()) return; // Skip empty lines
+        
+        // Parse format: 04/02-08:30:12.456789 [**] [200001] Allow Web Access to Gateway [**] SRC=192.168.1.50 DST=192.168.2.1 PROTO=TCP SPT=56789 DPT=80
+        const timestampMatch = line.match(/^(\d{2}\/\d{2}-\d{2}:\d{2}:\d{2}\.\d{6})/);
+        const alertIdMatch = line.match(/\[\*\*\] \[(\d+)\] (.*?) \[\*\*\]/);
+        
+        if (timestampMatch && alertIdMatch) {
+            const timestamp = timestampMatch[1];
+            const alertId = alertIdMatch[1];
+            const alertMessage = alertIdMatch[2];
+            
+            // Extract network information
+            const sourceIp = line.match(/SRC=(\S+)/)?.[1] || null;
+            const destIp = line.match(/DST=(\S+)/)?.[1] || null;
+            const protocol = line.match(/PROTO=(\S+)/)?.[1] || null;
+            const sourcePort = line.match(/SPT=(\d+)/)?.[1] || null;
+            const destPort = line.match(/DPT=(\d+)/)?.[1] || null;
+            const flags = line.match(/FLAGS:(\S+)/)?.[1] || null;
+            
+            logEntries.push({
+                timestamp,
+                alertId,
+                alertMessage,
+                sourceIp,
+                destIp,
+                protocol,
+                sourcePort,
+                destPort,
+                flags,
+                raw: line
+            });
+        }
+    });
+    
+    return logEntries;
+}
+
 // Function to read and parse all logs in the "logs" directory
 async function parseAllLogs() {
     const logDir = path.join(__dirname, 'logs');
@@ -84,6 +127,9 @@ async function parseAllLogs() {
         } else if (file.includes('iot')) {
             logType = 'iot';
             parsedData = parseIoTLog(logData);
+        } else if (file.includes('firewall')) {
+            logType = 'firewall';
+            parsedData = parseFirewallLog(logData);
         } else {
             logType = 'unknown';
             parsedData = logData.split('\n'); // Just return raw lines for unknown log types
@@ -198,18 +244,77 @@ app.get('/process-logs', async (req, res) => {
                         console.log(`Saved matching IoT log for device: ${matchingDevice.name}`);
                     }
                 }
+            } else if (type === 'firewall') {
+                // For firewall logs, check if source or destination IP matches a device IP
+                for (const entry of data) {
+                    const sourceIp = entry.sourceIp;
+                    const destIp = entry.destIp;
+                    
+                    // Find matching device by IP (either as source or destination)
+                    const matchingSourceDevice = allDevices.find(device => device.ip === sourceIp);
+                    const matchingDestDevice = allDevices.find(device => device.ip === destIp);
+                    
+                    // Process source device if found
+                    if (matchingSourceDevice) {
+                        // Save this log entry to the database
+                        const logEntry = new Log({
+                            deviceId: matchingSourceDevice.deviceId,
+                            deviceName: matchingSourceDevice.name,
+                            deviceIp: matchingSourceDevice.ip,
+                            logType: 'firewall-source',
+                            content: entry,
+                            sourceFile: fileName
+                        });
+                        
+                        await logEntry.save();
+                        
+                        // Also add to our deviceLogs structure for immediate display
+                        deviceLogs[matchingSourceDevice.deviceId].logs.push({
+                            id: logEntry._id,
+                            timestamp: logEntry.timestamp,
+                            type: 'firewall-source',
+                            content: entry,
+                            sourceFile: fileName
+                        });
+                        
+                        console.log(`Saved matching firewall source log for device: ${matchingSourceDevice.name}`);
+                    }
+                    
+                    // Process destination device if found and different from source
+                    if (matchingDestDevice && (!matchingSourceDevice || matchingDestDevice.deviceId !== matchingSourceDevice.deviceId)) {
+                        // Save this log entry to the database
+                        const logEntry = new Log({
+                            deviceId: matchingDestDevice.deviceId,
+                            deviceName: matchingDestDevice.name,
+                            deviceIp: matchingDestDevice.ip,
+                            logType: 'firewall-destination',
+                            content: entry,
+                            sourceFile: fileName
+                        });
+                        
+                        await logEntry.save();
+                        
+                        // Also add to our deviceLogs structure for immediate display
+                        deviceLogs[matchingDestDevice.deviceId].logs.push({
+                            id: logEntry._id,
+                            timestamp: logEntry.timestamp,
+                            type: 'firewall-destination',
+                            content: entry,
+                            sourceFile: fileName
+                        });
+                        
+                        console.log(`Saved matching firewall destination log for device: ${matchingDestDevice.name}`);
+                    }
+                }
             }
         }
         
         // Check if this is an API request or a dashboard request
-       
-            // Render the dashboard with device logs
-            res.render('device-dashboard', { 
-                deviceLogs: deviceLogs,
-                totalDevices: allDevices.length,
-                totalLogs: Object.values(deviceLogs).reduce((sum, device) => sum + device.logs.length, 0)
-            })
-          
+        res.render('device-dashboard', { 
+            deviceLogs: deviceLogs,
+            totalDevices: allDevices.length,
+            totalLogs: Object.values(deviceLogs).reduce((sum, device) => sum + device.logs.length, 0)
+        });
         
         console.log("Logs processed and matching entries saved to database");
             
@@ -229,9 +334,11 @@ app.get('/process-logs', async (req, res) => {
         }
     }
 });
+
 app.get('/' , (req,res)=>{
     res.render('index');
 })
+
 // Route to render the add device form
 app.get('/add-device', (req, res) => {
     res.render('add-device');
@@ -321,6 +428,48 @@ app.get('/api/logs/:deviceId', async (req, res) => {
     } catch (error) {
         console.error('Error fetching logs:', error);
         res.status(500).json({ error: 'Failed to fetch logs' });
+    }
+});
+
+// API to get firewall logs summary by device
+app.get('/api/firewall-summary', async (req, res) => {
+    try {
+        // Get counts of different types of alerts for each device
+        const firewallLogs = await Log.find({
+            logType: { $in: ['firewall-source', 'firewall-destination'] }
+        });
+        
+        // Create summary by device
+        const deviceSummary = {};
+        
+        firewallLogs.forEach(log => {
+            const deviceId = log.deviceId;
+            const alertMessage = log.content.alertMessage;
+            const isAuthorized = !alertMessage.includes('Unauthorized');
+            
+            if (!deviceSummary[deviceId]) {
+                deviceSummary[deviceId] = {
+                    deviceName: log.deviceName,
+                    deviceIp: log.deviceIp,
+                    authorized: 0,
+                    unauthorized: 0,
+                    total: 0
+                };
+            }
+            
+            if (isAuthorized) {
+                deviceSummary[deviceId].authorized++;
+            } else {
+                deviceSummary[deviceId].unauthorized++;
+            }
+            
+            deviceSummary[deviceId].total++;
+        });
+        
+        res.json(deviceSummary);
+    } catch (error) {
+        console.error('Error generating firewall summary:', error);
+        res.status(500).json({ error: 'Failed to generate firewall summary' });
     }
 });
 
