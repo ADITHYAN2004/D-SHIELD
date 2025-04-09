@@ -9,9 +9,8 @@ The gateway enables:
 - Real-time traffic analysis using tools like Snort and Tshark
 - Packet inspection and alerting to monitor for suspicious activity
 
---------------------------------------------------
+
 1. Tools Used
-```
 1.1 `hostapd`
 - **Purpose**: Create a Wi-Fi access point.
 - **Config File**: `/etc/hostapd/hostapd.conf`
