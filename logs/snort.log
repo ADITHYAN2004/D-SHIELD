@@ -1,0 +1,9 @@
+04/09-08:05:51.216365  [**] [1:1000015:1] Unauthorized Generic Nmap Scan [**] [Priority: 0] {TCP} 192.168.2.10:35692 -> 192.168.2.1:548
+04/09-08:05:51.216365  [**] [1:1000010:1] Unauthorized SYN Nmap scan detected [**] [Priority: 0] {TCP} 192.168.2.10:35692 -> 192.168.2.1:548
+04/09-08:05:51.216365  [**] [1:1000015:1] Unauthorized Generic Nmap Scan [**] [Priority: 0] {TCP} 192.168.2.10:35136 -> 192.168.2.1:1055
+04/09-08:05:51.216365  [**] [1:1000010:1] Unauthorized SYN Nmap scan detected [**] [Priority: 0] {TCP} 192.168.2.10:35136 -> 192.168.2.1:1055
+04/09-08:05:51.216365  [**] [1:1000015:1] Unauthorized Generic Nmap Scan [**] [Priority: 0] {TCP} 192.168.2.10:35136 -> 192.168.2.1:65129
+04/09-08:05:51.216365  [**] [1:1000010:1] Unauthorized SYN Nmap scan detected [**] [Priority: 0] {TCP} 192.168.2.10:35136 -> 192.168.2.1:65129
+04/09-08:05:51.216365  [**] [1:1000015:1] Unauthorized Generic Nmap Scan [**] [Priority: 0] {TCP} 192.168.2.10:33780 -> 192.168.2.1:1113
+04/09-08:05:51.216365  [**] [1:1000010:1] Unauthorized SYN Nmap scan detected [**] [Priority: 0] {TCP} 192.168.2.10:33780 -> 192.168.2.1:1113
+04/09-08:05:51.216365  [**] [1:1000015:1] Unauthorized Generic Nmap Scan [**] [Priority: 0] {TCP} 192.168.2.10:40148 -> 192.168.2.1:8194

@@ -22,6 +22,22 @@ mongoose.connect('mongodb://localhost:27017/network_monitor', {
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Define a schema for security alert logs
+const SecurityAlertSchema = new mongoose.Schema({
+  timestamp: { type: String, required: true },
+  alertId: { type: String, required: true },
+  alertName: { type: String, required: true },
+  priority: { type: Number, default: 0 },
+  protocol: { type: String, required: true },
+  sourceIP: { type: String, required: true },
+  sourcePort: { type: Number, required: true },
+  destinationIP: { type: String, required: true },
+  destinationPort: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const SecurityAlert = mongoose.model('SecurityAlert', SecurityAlertSchema);
+
 function parseNmapLog(log) {
     const nmapResults = [];
     const lines = log.split('\n');
@@ -63,47 +79,31 @@ function parseIoTLog(log) {
     return logEntries;
 }
 
-// Function to parse Firewall logs
-function parseFirewallLog(log) {
-    const logEntries = [];
-    const lines = log.split('\n');
+// New function to parse security alert logs
+function parseSecurityAlertLog(logData) {
+  const logLines = logData.split('\n').filter(line => line.trim() !== '');
+  
+  return logLines.map(line => {
+    // Extract the different parts of the log entry
+    const timestampMatch = line.match(/^(\d{2}\/\d{2}-\d{2}:\d{2}:\d{2}\.\d+)/);
+    const alertIdMatch = line.match(/\[(\d+:\d+:\d+)\]/);
+    const alertNameMatch = line.match(/\] ([^[]+) \[\*\*/);
+    const priorityMatch = line.match(/\[Priority: (\d+)\]/);
+    const protocolMatch = line.match(/{([^}]+)}/);
+    const ipMatch = line.match(/} ([0-9.]+):(\d+) -> ([0-9.]+):(\d+)/);
     
-    lines.forEach((line) => {
-        if (!line.trim()) return; // Skip empty lines
-        
-        // Parse format: 04/02-08:30:12.456789 [**] [200001] Allow Web Access to Gateway [**] SRC=192.168.1.50 DST=192.168.2.1 PROTO=TCP SPT=56789 DPT=80
-        const timestampMatch = line.match(/^(\d{2}\/\d{2}-\d{2}:\d{2}:\d{2}\.\d{6})/);
-        const alertIdMatch = line.match(/\[\*\*\] \[(\d+)\] (.*?) \[\*\*\]/);
-        
-        if (timestampMatch && alertIdMatch) {
-            const timestamp = timestampMatch[1];
-            const alertId = alertIdMatch[1];
-            const alertMessage = alertIdMatch[2];
-            
-            // Extract network information
-            const sourceIp = line.match(/SRC=(\S+)/)?.[1] || null;
-            const destIp = line.match(/DST=(\S+)/)?.[1] || null;
-            const protocol = line.match(/PROTO=(\S+)/)?.[1] || null;
-            const sourcePort = line.match(/SPT=(\d+)/)?.[1] || null;
-            const destPort = line.match(/DPT=(\d+)/)?.[1] || null;
-            const flags = line.match(/FLAGS:(\S+)/)?.[1] || null;
-            
-            logEntries.push({
-                timestamp,
-                alertId,
-                alertMessage,
-                sourceIp,
-                destIp,
-                protocol,
-                sourcePort,
-                destPort,
-                flags,
-                raw: line
-            });
-        }
-    });
-    
-    return logEntries;
+    return {
+      timestamp: timestampMatch ? timestampMatch[1] : 'Unknown',
+      alertId: alertIdMatch ? alertIdMatch[1] : 'Unknown',
+      alertName: alertNameMatch ? alertNameMatch[1].trim() : 'Unknown',
+      priority: priorityMatch ? parseInt(priorityMatch[1]) : -1,
+      protocol: protocolMatch ? protocolMatch[1] : 'Unknown',
+      sourceIP: ipMatch ? ipMatch[1] : 'Unknown',
+      sourcePort: ipMatch ? parseInt(ipMatch[2]) : -1,
+      destinationIP: ipMatch ? ipMatch[3] : 'Unknown',
+      destinationPort: ipMatch ? ipMatch[4].replace(/[^0-9]/g, '') : 'Unknown', // Clean up any non-numeric characters
+    };
+  });
 }
 
 // Function to read and parse all logs in the "logs" directory
@@ -127,9 +127,10 @@ async function parseAllLogs() {
         } else if (file.includes('iot')) {
             logType = 'iot';
             parsedData = parseIoTLog(logData);
-        } else if (file.includes('firewall')) {
-            logType = 'firewall';
-            parsedData = parseFirewallLog(logData);
+        } else if (file.includes('alert') || file.includes('ids')) {
+            // Added check for security alert logs
+            logType = 'security-alert';
+            parsedData = parseSecurityAlertLog(logData);
         } else {
             logType = 'unknown';
             parsedData = logData.split('\n'); // Just return raw lines for unknown log types
@@ -244,78 +245,52 @@ app.get('/process-logs', async (req, res) => {
                         console.log(`Saved matching IoT log for device: ${matchingDevice.name}`);
                     }
                 }
-            } else if (type === 'firewall') {
-                // For firewall logs, check if source or destination IP matches a device IP
+            } else if (type === 'security-alert') {
+                // For security alert logs, save them to the database
                 for (const entry of data) {
-                    const sourceIp = entry.sourceIp;
-                    const destIp = entry.destIp;
+                    // Find matching device by IP
+                    const matchingDevice = allDevices.find(device => 
+                        device.ip === entry.sourceIP || device.ip === entry.destinationIP
+                    );
                     
-                    // Find matching device by IP (either as source or destination)
-                    const matchingSourceDevice = allDevices.find(device => device.ip === sourceIp);
-                    const matchingDestDevice = allDevices.find(device => device.ip === destIp);
+                    // Save security alert to dedicated collection
+                    const securityAlert = new SecurityAlert(entry);
+                    await securityAlert.save();
                     
-                    // Process source device if found
-                    if (matchingSourceDevice) {
-                        // Save this log entry to the database
+                    // If we have a matching device, also save to the device logs
+                    if (matchingDevice) {
                         const logEntry = new Log({
-                            deviceId: matchingSourceDevice.deviceId,
-                            deviceName: matchingSourceDevice.name,
-                            deviceIp: matchingSourceDevice.ip,
-                            logType: 'firewall-source',
+                            deviceId: matchingDevice.deviceId,
+                            deviceName: matchingDevice.name,
+                            deviceIp: matchingDevice.ip,
+                            logType: 'security-alert',
                             content: entry,
                             sourceFile: fileName
                         });
                         
                         await logEntry.save();
                         
-                        // Also add to our deviceLogs structure for immediate display
-                        deviceLogs[matchingSourceDevice.deviceId].logs.push({
+                        deviceLogs[matchingDevice.deviceId].logs.push({
                             id: logEntry._id,
                             timestamp: logEntry.timestamp,
-                            type: 'firewall-source',
+                            type: 'security-alert',
                             content: entry,
                             sourceFile: fileName
                         });
                         
-                        console.log(`Saved matching firewall source log for device: ${matchingSourceDevice.name}`);
-                    }
-                    
-                    // Process destination device if found and different from source
-                    if (matchingDestDevice && (!matchingSourceDevice || matchingDestDevice.deviceId !== matchingSourceDevice.deviceId)) {
-                        // Save this log entry to the database
-                        const logEntry = new Log({
-                            deviceId: matchingDestDevice.deviceId,
-                            deviceName: matchingDestDevice.name,
-                            deviceIp: matchingDestDevice.ip,
-                            logType: 'firewall-destination',
-                            content: entry,
-                            sourceFile: fileName
-                        });
-                        
-                        await logEntry.save();
-                        
-                        // Also add to our deviceLogs structure for immediate display
-                        deviceLogs[matchingDestDevice.deviceId].logs.push({
-                            id: logEntry._id,
-                            timestamp: logEntry.timestamp,
-                            type: 'firewall-destination',
-                            content: entry,
-                            sourceFile: fileName
-                        });
-                        
-                        console.log(`Saved matching firewall destination log for device: ${matchingDestDevice.name}`);
+                        console.log(`Saved matching security alert for device: ${matchingDevice.name}`);
                     }
                 }
             }
         }
         
-        // Check if this is an API request or a dashboard request
+        // Render the dashboard with device logs
         res.render('device-dashboard', { 
             deviceLogs: deviceLogs,
             totalDevices: allDevices.length,
             totalLogs: Object.values(deviceLogs).reduce((sum, device) => sum + device.logs.length, 0)
         });
-        
+          
         console.log("Logs processed and matching entries saved to database");
             
     } catch (error) {
@@ -335,10 +310,73 @@ app.get('/process-logs', async (req, res) => {
     }
 });
 
+// New route to display security alerts
+app.get('/security-alerts', async (req, res) => {
+    try {
+        // Fetch all security alerts from the database
+        const alerts = await SecurityAlert.find().sort({ timestamp: -1 });
+        
+        // Get some summary information
+        const totalAlerts = alerts.length;
+        const uniqueSourceIPs = new Set(alerts.map(alert => alert.sourceIP)).size;
+        const uniqueDestinationIPs = new Set(alerts.map(alert => alert.destinationIP)).size;
+        const alertTypes = [...new Set(alerts.map(alert => alert.alertName))];
+        
+        // Render the security alerts template
+        res.render('security-alerts', { 
+            alerts,
+            totalAlerts,
+            uniqueSourceIPs,
+            uniqueDestinationIPs,
+            alertTypes
+        });
+    } catch (error) {
+        console.error('Error fetching security alerts:', error);
+        res.status(500).render('error', {
+            message: 'Failed to fetch security alerts',
+            error: error.message
+        });
+    }
+});
+
+// New route to parse security alert log data directly from file
+app.get('/parse-security-alerts', async (req, res) => {
+    try {
+        // Sample log data path - replace with actual path or input method
+        const logFilePath = path.join(__dirname, 'logs', 'snort.log');
+        
+        // Check if file exists
+       
+            // Read from the actual file
+            const logData = await fs.promises.readFile(logFilePath, 'utf8');
+            const parsedAlerts = parseSecurityAlertLog(logData);
+            
+            // Save parsed alerts to database
+            for (const alert of parsedAlerts) {
+                const securityAlert = new SecurityAlert(alert);
+                await securityAlert.save();
+            }
+            
+            res.render('security-alerts', { 
+                alerts: parsedAlerts,
+                totalAlerts: parsedAlerts.length,
+                uniqueSourceIPs: new Set(parsedAlerts.map(alert => alert.sourceIP)).size,
+                uniqueDestinationIPs: new Set(parsedAlerts.map(alert => alert.destinationIP)).size,
+                alertTypes: [...new Set(parsedAlerts.map(alert => alert.alertName))]
+            });
+        
+    } catch (error) {
+        console.error('Error parsing security alerts:', error);
+        res.status(500).render('error', {
+            message: 'Failed to parse security alerts',
+            error: error.message
+        });
+    }
+});
+
 app.get('/' , (req,res)=>{
     res.render('index');
 })
-
 // Route to render the add device form
 app.get('/add-device', (req, res) => {
     res.render('add-device');
@@ -428,48 +466,6 @@ app.get('/api/logs/:deviceId', async (req, res) => {
     } catch (error) {
         console.error('Error fetching logs:', error);
         res.status(500).json({ error: 'Failed to fetch logs' });
-    }
-});
-
-// API to get firewall logs summary by device
-app.get('/api/firewall-summary', async (req, res) => {
-    try {
-        // Get counts of different types of alerts for each device
-        const firewallLogs = await Log.find({
-            logType: { $in: ['firewall-source', 'firewall-destination'] }
-        });
-        
-        // Create summary by device
-        const deviceSummary = {};
-        
-        firewallLogs.forEach(log => {
-            const deviceId = log.deviceId;
-            const alertMessage = log.content.alertMessage;
-            const isAuthorized = !alertMessage.includes('Unauthorized');
-            
-            if (!deviceSummary[deviceId]) {
-                deviceSummary[deviceId] = {
-                    deviceName: log.deviceName,
-                    deviceIp: log.deviceIp,
-                    authorized: 0,
-                    unauthorized: 0,
-                    total: 0
-                };
-            }
-            
-            if (isAuthorized) {
-                deviceSummary[deviceId].authorized++;
-            } else {
-                deviceSummary[deviceId].unauthorized++;
-            }
-            
-            deviceSummary[deviceId].total++;
-        });
-        
-        res.json(deviceSummary);
-    } catch (error) {
-        console.error('Error generating firewall summary:', error);
-        res.status(500).json({ error: 'Failed to generate firewall summary' });
     }
 });
 
